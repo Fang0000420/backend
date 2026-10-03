@@ -2,13 +2,14 @@ package com.ff.backend.dto.response;
 
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 /**
  * 活动信息表(Activity)响应 DTO
  *
  * @author makejava
- * @since 2026-09-29 14:04:50
+ * @since 2026-10-01 11:12:39
  */
 @Data
 public class ActivityResponse {
@@ -51,6 +52,7 @@ public class ActivityResponse {
     /**
      * 逻辑删除标识: 0-未删除, 1-已删除
      */
+    @TableLogic
     private Integer isDeleted;
 
     /**
@@ -62,6 +64,11 @@ public class ActivityResponse {
      * 更新时间
      */
     private Date updateTime;
+
+    /**
+     * 活动容量
+     */
+    private Integer capacity;
 
 }
 

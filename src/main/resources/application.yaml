@@ -1,3 +1,8 @@
+logging:
+  level:
+    org.springframework.security.web.csrf: DEBUG
+    com.ff.backend.service.impl.DatabaseUserDetailsService: DEBUG
+
 spring:
   application:
     name: backend
@@ -18,3 +23,5 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+    csrf:
+      enabled: true

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.servlet.annotation.HttpMethodConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,7 @@ import java.io.Serializable;
  * 活动信息表(Activity)数据库实体类
  *
  * @author makejava
- * @since 2026-09-29 14:04:49
+ * @since 2026-10-01 11:12:37
  */
 @Data
 @Builder
@@ -88,6 +89,13 @@ public class Activity implements Serializable {
      */
     @TableField(value = "update_time")
     private Date updateTime;
+
+    /**
+     * 活动容量
+     */
+
+    @TableField(value = "capacity")
+    private Integer capacity;
 
 }
 

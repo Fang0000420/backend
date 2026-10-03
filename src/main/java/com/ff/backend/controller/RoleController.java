@@ -1,13 +1,12 @@
 package com.ff.backend.controller;
 
 
+import com.ff.backend.dto.request.RoleCreateRequest;
+import com.ff.backend.dto.request.RoleUpdateRequest;
+import com.ff.backend.dto.response.RoleResponse;
+import com.ff.backend.entity.Role;
+import com.ff.backend.service.RoleService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ff.backend.dto.request.ActivityCreateRequest;
-import com.ff.backend.dto.request.ActivityUpdateRequest;
-import com.ff.backend.dto.response.ActivityResponse;
-import com.ff.backend.entity.Activity;
-import com.ff.backend.service.ActivityService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
@@ -17,36 +16,36 @@ import org.springframework.web.server.ResponseStatusException;
 
 
 /**
- * 活动信息表(Activity)REST 控制器
+ * 角色表(Role)REST 控制器
  *
  * @author makejava
- * @since 2026-10-01 11:12:37
+ * @since 2026-10-03 17:27:04
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/activity")
-public class ActivityController {
+@RequestMapping("/api/role")
+public class RoleController {
 
-    private final ActivityService activityService;
+    private final RoleService roleService;
 
     /**
-     * 查询全部数据
+     * 分页查询数据
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('activity:read')")
-    public Page<ActivityResponse> list(
+    @PreAuthorize("hasAuthority('role:read')")
+    public Page<RoleResponse> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Activity> activityPage = this.activityService.listActivities(page, size);
-        Page<ActivityResponse> response = new Page<>(
-                activityPage.getCurrent(),
-                activityPage.getSize(),
-                activityPage.getTotal()
+        Page<Role> entityPage = this.roleService.listPage(page, size);
+        Page<RoleResponse> response = new Page<>(
+                entityPage.getCurrent(),
+                entityPage.getSize(),
+                entityPage.getTotal()
         );
 
         response.setRecords(
-                activityPage.getRecords().stream()
+                entityPage.getRecords().stream()
                         .map(this::toResponse)
                         .toList()
         );
@@ -57,8 +56,8 @@ public class ActivityController {
      * 根据主键查询单条数据
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('activity:read')")
-    public ActivityResponse getById(
+    @PreAuthorize("hasAuthority('role:read')")
+    public RoleResponse getById(
             @PathVariable Long id) {
         return toResponse(getEntityOrThrow(id));
     }
@@ -67,15 +66,15 @@ public class ActivityController {
      * 新增数据
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('role:create')")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('activity:create')")
-    public ActivityResponse create(
-            @Valid @RequestBody ActivityCreateRequest request) {
+    public RoleResponse create(
+            @RequestBody RoleCreateRequest request) {
 
-        Activity entity = new Activity();
+        Role entity = new Role();
         BeanUtils.copyProperties(request, entity);
 
-        this.activityService.save(entity);
+        this.roleService.save(entity);
         return toResponse(entity);
     }
 
@@ -83,15 +82,15 @@ public class ActivityController {
      * 修改数据
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('activity:update')")
-    public ActivityResponse update(
+    @PreAuthorize("hasAuthority('role:update')")
+    public RoleResponse update(
             @PathVariable Long id,
-            @Valid @RequestBody ActivityUpdateRequest request) {
+            @RequestBody RoleUpdateRequest request) {
 
-        Activity entity = getEntityOrThrow(id);
+        Role entity = getEntityOrThrow(id);
         BeanUtils.copyProperties(request, entity);
 
-        this.activityService.updateById(entity);
+        this.roleService.updateById(entity);
         return toResponse(entity);
     }
 
@@ -99,27 +98,27 @@ public class ActivityController {
      * 根据主键删除数据
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('role:delete')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('activity:delete')")
     public void delete(
             @PathVariable Long id) {
 
-        Activity entity = getEntityOrThrow(id);
-        this.activityService.removeById(entity);
+        Role entity = getEntityOrThrow(id);
+        this.roleService.removeById(entity);
     }
 
     /**
      * 根据主键获取实体，不存在时返回 404
      */
-    private Activity getEntityOrThrow(
+    private Role getEntityOrThrow(
             Long id) {
 
-        Activity entity = this.activityService.getById(id);
+        Role entity = this.roleService.getById(id);
 
         if (entity == null) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Activity not found: " + id
+                    "Role not found: " + id
             );
         }
 
@@ -129,11 +128,11 @@ public class ActivityController {
     /**
      * Entity -> Response
      */
-    private ActivityResponse toResponse(
-            Activity entity) {
+    private RoleResponse toResponse(
+            Role entity) {
 
-        ActivityResponse response =
-                new ActivityResponse();
+        RoleResponse response =
+                new RoleResponse();
 
         BeanUtils.copyProperties(entity, response);
         return response;

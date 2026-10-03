@@ -1,0 +1,57 @@
+package com.ff.backend.dto.response;
+
+import java.util.Date;
+
+import lombok.Data;
+
+/**
+ * 权限表(Permission)响应 DTO
+ *
+ * @author makejava
+ * @since 2026-10-03 12:25:52
+ */
+@Data
+public class PermissionResponse {
+
+    /**
+     * 权限ID
+     */
+    private Long id;
+
+    /**
+     * 权限名称
+     */
+    private String name;
+
+    /**
+     * 权限编码，例如 activity:create
+     */
+    private String code;
+
+    /**
+     * 父权限ID，NULL表示顶级权限
+     */
+    private Long parentId;
+
+    /**
+     * 权限类型：1菜单，2操作/API
+     */
+    private Integer type;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 逻辑删除：0未删除，1已删除
+     */
+    private Integer isDelete;
+
+}
+
