@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import com.ff.backend.entity.Activity;
 
 /**
  * 活动信息表(Activity)新增请求 DTO
@@ -14,6 +16,7 @@ import lombok.Data;
  * @since 2026-10-01 11:12:38
  */
 @Data
+@NoArgsConstructor
 public class ActivityCreateRequest {
 
     /**
@@ -33,12 +36,6 @@ public class ActivityCreateRequest {
      */
     @NotNull
     private Integer status;
-
-    /**
-     * 创建人/负责人ID
-     */
-    @NotNull
-    private Long userId;
 
     /**
      * 活动开始时间
@@ -74,6 +71,22 @@ public class ActivityCreateRequest {
     @Min(value = 1, message = "容量必须大于0")
     @Max(value = 10001, message = "容量必须小于等于10000")
     private Integer capacity;
+
+    /** 从实体复制对应字段；实体为 null 时，各字段保留 null。 */
+    public ActivityCreateRequest(Activity entity) {
+        if (entity == null) {
+            return;
+        }
+        this.name = entity.getName();
+        this.description = entity.getDescription();
+        this.status = entity.getStatus();
+        this.startTime = entity.getStartTime();
+        this.endTime = entity.getEndTime();
+        this.isDeleted = entity.getIsDeleted();
+        this.createTime = entity.getCreateTime();
+        this.updateTime = entity.getUpdateTime();
+        this.capacity = entity.getCapacity();
+    }
 
 }
 

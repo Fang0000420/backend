@@ -3,10 +3,12 @@ package com.ff.backend.service.impl;
 import com.ff.backend.entity.User;
 import com.ff.backend.service.PermissionService;
 import com.ff.backend.service.UserService;
+import com.ff.backend.security.LoginUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -36,13 +38,10 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         List<String> permission = permissionService.getPermissionByUserId(user.getId());
         String passwordHash = user.getPasswordHash();
 
-        UserDetails details =
-                org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUsername())
-                        .password(passwordHash)
-                        .disabled(!enabled)
-                        .authorities(permission.toArray(String[]::new))
-                        .build();
+        UserDetails details = new LoginUser(
+                user.getId(), user.getUsername(), passwordHash, enabled,
+                permission.stream().map(SimpleGrantedAuthority::new).toList()
+        );
         log.debug("用户"+username+"登录");
         return details;
     }

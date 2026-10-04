@@ -3,6 +3,8 @@ package com.ff.backend.dto.request;
 import java.util.Date;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import com.ff.backend.entity.User;
 
 /**
  * 用户表(User)修改请求 DTO
@@ -11,6 +13,7 @@ import lombok.Data;
  * @since 2026-10-03 12:28:15
  */
 @Data
+@NoArgsConstructor
 public class UserUpdateRequest {
 
     /**
@@ -63,6 +66,22 @@ public class UserUpdateRequest {
      * 逻辑删除：0未删除，1已删除
      */
     private Integer isDelete;
+
+    /** 从实体复制对应字段；实体为 null 时，各字段保留 null。 */
+    public UserUpdateRequest(User entity) {
+        if (entity == null) {
+            return;
+        }
+        this.username = entity.getUsername();
+        this.name = entity.getName();
+        this.phone = entity.getPhone();
+        this.email = entity.getEmail();
+        this.address = entity.getAddress();
+        this.status = entity.getStatus();
+        this.updateTime = entity.getUpdateTime();
+        this.isDelete = entity.getIsDelete();
+        // 实体不保存明文旧密码或新密码，passWordOld / passWordNew 保留 null。
+    }
 
 }
 

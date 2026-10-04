@@ -1,6 +1,5 @@
 package com.ff.backend.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.ff.backend.entity.Activity;
@@ -23,12 +22,23 @@ public class ActivityServiceImpl
     private final ActivityMapper activityMapper;
 
     @Override
-    public Page<Activity> listActivities(int page, int size) {
-        return this.page(
-                new Page<Activity>(page, size),
-                Wrappers.<Activity>lambdaQuery()
-                        .orderByAsc(Activity::getId)
-        );
+    public Page<Activity> listActivities(int page, int size, Long userId) {
+        return activityMapper.listActivities(new Page<>(page, size), userId);
+    }
+
+    @Override
+    public void createActivity(Long userId, Long activityId) {
+        activityMapper.createActivity(userId, activityId);
+    }
+
+    @Override
+    public boolean haveActivity(Long userId, Long activityId) {
+        System.out.println(userId + "+" + activityId);
+        Long i = activityMapper.haveActivity(userId, activityId);
+        if (i == null) {
+            return false;
+        }
+        return i == 11 || i == 12;
     }
 }
 

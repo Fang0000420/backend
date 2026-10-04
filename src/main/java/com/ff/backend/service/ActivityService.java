@@ -11,6 +11,8 @@ import com.ff.backend.entity.Activity;
  * @since 2026-10-01 11:12:38
  */
 public interface ActivityService extends IService<Activity> {
-    Page<Activity> listActivities(int page, int size);
+    Page<Activity> listActivities(int page, int size,Long userId);
+    void createActivity(Long userId, Long activityId);
+    boolean haveActivity (Long userId, Long activityId);
 }
 

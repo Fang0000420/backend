@@ -4,6 +4,8 @@ import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import com.ff.backend.entity.Activity;
 
 /**
  * 活动信息表(Activity)响应 DTO
@@ -12,6 +14,7 @@ import lombok.Data;
  * @since 2026-10-01 11:12:39
  */
 @Data
+@NoArgsConstructor
 public class ActivityResponse {
 
     /**
@@ -69,6 +72,24 @@ public class ActivityResponse {
      * 活动容量
      */
     private Integer capacity;
+
+    /** 从实体复制对应字段；实体为 null 时，各字段保留 null。 */
+    public ActivityResponse(Activity entity) {
+        if (entity == null) {
+            return;
+        }
+        this.id = entity.getId();
+        this.name = entity.getName();
+        this.description = entity.getDescription();
+        this.status = entity.getStatus();
+        this.userId = entity.getUserId();
+        this.startTime = entity.getStartTime();
+        this.endTime = entity.getEndTime();
+        this.isDeleted = entity.getIsDeleted();
+        this.createTime = entity.getCreateTime();
+        this.updateTime = entity.getUpdateTime();
+        this.capacity = entity.getCapacity();
+    }
 
 }
 

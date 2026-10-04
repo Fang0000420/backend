@@ -6,12 +6,14 @@ import com.ff.backend.dto.request.ActivityCreateRequest;
 import com.ff.backend.dto.request.ActivityUpdateRequest;
 import com.ff.backend.dto.response.ActivityResponse;
 import com.ff.backend.entity.Activity;
+import com.ff.backend.security.LoginUser;
 import com.ff.backend.service.ActivityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,23 +35,11 @@ public class ActivityController {
      * 查询全部数据
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('activity:read')")
-    public Page<ActivityResponse> list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Page<Activity> activityPage = this.activityService.listActivities(page, size);
-        Page<ActivityResponse> response = new Page<>(
-                activityPage.getCurrent(),
-                activityPage.getSize(),
-                activityPage.getTotal()
-        );
+    public Page<ActivityResponse> list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size, @AuthenticationPrincipal LoginUser currentUser) {
+        Page<Activity> activityPage = this.activityService.listActivities(page, size, currentUser.getUserId());
+        Page<ActivityResponse> response = new Page<>(activityPage.getCurrent(), activityPage.getSize(), activityPage.getTotal());
 
-        response.setRecords(
-                activityPage.getRecords().stream()
-                        .map(this::toResponse)
-                        .toList()
-        );
+        response.setRecords(activityPage.getRecords().stream().map(this::toResponse).toList());
         return response;
     }
 
@@ -58,8 +48,7 @@ public class ActivityController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('activity:read')")
-    public ActivityResponse getById(
-            @PathVariable Long id) {
+    public ActivityResponse getById(@PathVariable Long id) {
         return toResponse(getEntityOrThrow(id));
     }
 
@@ -69,13 +58,14 @@ public class ActivityController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('activity:create')")
-    public ActivityResponse create(
-            @Valid @RequestBody ActivityCreateRequest request) {
+    public ActivityResponse create(@Valid @RequestBody ActivityCreateRequest request, @AuthenticationPrincipal LoginUser currentUser) {
 
         Activity entity = new Activity();
         BeanUtils.copyProperties(request, entity);
+        entity.setUserId(currentUser.getUserId());
 
         this.activityService.save(entity);
+        activityService.createActivity(entity.getUserId(), entity.getId());
         return toResponse(entity);
     }
 
@@ -84,10 +74,12 @@ public class ActivityController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('activity:update')")
-    public ActivityResponse update(
-            @PathVariable Long id,
-            @Valid @RequestBody ActivityUpdateRequest request) {
-
+    public ActivityResponse update(@PathVariable Long id, @Valid @RequestBody ActivityUpdateRequest request, @AuthenticationPrincipal LoginUser currentUser) {
+        Long userId = currentUser.getUserId();
+        boolean b = this.activityService.haveActivity(userId, id);
+        if (!b) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "noAuthority");
+        }
         Activity entity = getEntityOrThrow(id);
         BeanUtils.copyProperties(request, entity);
 
@@ -101,9 +93,11 @@ public class ActivityController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('activity:delete')")
-    public void delete(
-            @PathVariable Long id) {
-
+    public void delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser currentUser) {
+        boolean b = this.activityService.haveActivity(currentUser.getUserId(), id);
+        if (!b) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "noAuthority");
+        }
         Activity entity = getEntityOrThrow(id);
         this.activityService.removeById(entity);
     }
@@ -111,16 +105,12 @@ public class ActivityController {
     /**
      * 根据主键获取实体，不存在时返回 404
      */
-    private Activity getEntityOrThrow(
-            Long id) {
+    private Activity getEntityOrThrow(Long id) {
 
         Activity entity = this.activityService.getById(id);
 
         if (entity == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Activity not found: " + id
-            );
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found: " + id);
         }
 
         return entity;
@@ -129,11 +119,9 @@ public class ActivityController {
     /**
      * Entity -> Response
      */
-    private ActivityResponse toResponse(
-            Activity entity) {
+    private ActivityResponse toResponse(Activity entity) {
 
-        ActivityResponse response =
-                new ActivityResponse();
+        ActivityResponse response = new ActivityResponse();
 
         BeanUtils.copyProperties(entity, response);
         return response;

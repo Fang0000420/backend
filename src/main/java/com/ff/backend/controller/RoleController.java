@@ -1,18 +1,25 @@
 package com.ff.backend.controller;
 
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ff.backend.dto.request.RoleCreateRequest;
 import com.ff.backend.dto.request.RoleUpdateRequest;
 import com.ff.backend.dto.response.RoleResponse;
 import com.ff.backend.entity.Role;
+import com.ff.backend.entity.SysRolePermission;
+import com.ff.backend.security.LoginUser;
 import com.ff.backend.service.RoleService;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ff.backend.service.SysRolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 
 /**
@@ -27,7 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class RoleController {
 
     private final RoleService roleService;
-
+    private final SysRolePermissionService rolePermissionService;
     /**
      * 分页查询数据
      */
@@ -59,7 +66,16 @@ public class RoleController {
     @PreAuthorize("hasAuthority('role:read')")
     public RoleResponse getById(
             @PathVariable Long id) {
-        return toResponse(getEntityOrThrow(id));
+        List<Long> list = this.rolePermissionService.list(
+                Wrappers.<SysRolePermission>lambdaQuery()
+                .select(SysRolePermission::getPermissionId)
+                .eq(SysRolePermission::getRoleId, id))
+                .stream()
+                .map(SysRolePermission::getPermissionId)
+                .toList();
+        RoleResponse response = toResponse(getEntityOrThrow(id));
+        response.setPermissionIds(list);
+        return response;
     }
 
     /**
@@ -69,12 +85,19 @@ public class RoleController {
     @PreAuthorize("hasAuthority('role:create')")
     @ResponseStatus(HttpStatus.CREATED)
     public RoleResponse create(
-            @RequestBody RoleCreateRequest request) {
+            @RequestBody RoleCreateRequest request,
+            @AuthenticationPrincipal LoginUser currentUser) {
 
+        if (!this.roleService.hasPermission(request.getPermissionIds(), currentUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "out of authority"
+            );
+        }
         Role entity = new Role();
         BeanUtils.copyProperties(request, entity);
-
         this.roleService.save(entity);
+        this.roleService.updateRolePermission(entity.getId(), request.getPermissionIds());
         return toResponse(entity);
     }
 
@@ -85,11 +108,19 @@ public class RoleController {
     @PreAuthorize("hasAuthority('role:update')")
     public RoleResponse update(
             @PathVariable Long id,
-            @RequestBody RoleUpdateRequest request) {
+            @RequestBody RoleUpdateRequest request,
+            @AuthenticationPrincipal LoginUser currentUser) {
 
         Role entity = getEntityOrThrow(id);
         BeanUtils.copyProperties(request, entity);
 
+        if (!this.roleService.hasPermission(request.getPermissionIds(), currentUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "out of authority"
+            );
+        }
+        this.roleService.updateRolePermission(id, request.getPermissionIds());
         this.roleService.updateById(entity);
         return toResponse(entity);
     }
@@ -105,6 +136,12 @@ public class RoleController {
 
         Role entity = getEntityOrThrow(id);
         this.roleService.removeById(entity);
+    }
+
+    @GetMapping("/userrole")
+    @PreAuthorize("hasAuthority('role:read')")
+    public RoleResponse getRoleByUser(@AuthenticationPrincipal LoginUser currentUser) {
+        return this.roleService.getRoleByUser(currentUser.getUserId());
     }
 
     /**
